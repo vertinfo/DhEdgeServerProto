@@ -1,19 +1,24 @@
 import asyncio
 import json
 import sqlite3
+from icecream import ic
 from bleak import BleakScanner, BleakClient
 
 # Define the specific service and characteristic UUIDs
 SERVICE_UUID = "00000000-0001-11e1-9ab4-0002a5d5c51b"
-CHARACTERISTIC_UUID = "00000005-0002-11e1-ac36-0002a5d5c51b"
+CHARACTERISTIC_UUID = "00000004-0002-11e1-ac36-0002a5d5c51b"
 
 # SQLite Database setup
-DB_FILE = "datahoist"  # Path to your SQLite database file
+DB_FILE = "datahoist.db"  # Path to your SQLite database file
 # DB_FILE = "sqlite:///C:/Users/umesh/Desktop/datahoist"
 buffer = ""  # Buffer to accumulate incoming data
 
+rowno = 1
+loopno = 1
+
 # Function to insert data into the SQLite database
 def insert_data(data):
+    global rowno
     connection = sqlite3.connect(DB_FILE)
     cursor = connection.cursor()
     
@@ -45,7 +50,8 @@ def insert_data(data):
     try:
         cursor.execute(insert_query, values)
         connection.commit()
-        print(f"Data inserted: {json.dumps(data, indent=2)}")
+        ic(f"record: {rowno}")
+        rowno += 1
     except sqlite3.Error as e:
         print(f"SQLite error: {e}")
     finally:
@@ -55,11 +61,13 @@ def insert_data(data):
 async def notification_handler(characteristic, data):
     """Callback function to handle notifications from the characteristic."""
     global buffer
+    global loopno
     try:
         # Decode the received data
         raw_text = data.decode('utf-8')
         buffer += raw_text  # Append the new data to the buffer
-
+        loopno += 1
+        print(buffer)
         # Check if we have a complete JSON object
         while True:
             try:
@@ -70,6 +78,7 @@ async def notification_handler(characteristic, data):
                 break  # Break the loop after successfully processing the full message
             except json.JSONDecodeError:
                 # If JSON is not complete, break and wait for more data
+                ic(f"partial:{loopno}")
                 break
 
     except UnicodeDecodeError:
