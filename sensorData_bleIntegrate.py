@@ -110,7 +110,7 @@ async def run():
 
         print(f"Scanning for BLE devices for up to {SCAN_DURATION} seconds...")
 
-        target_device_name = "DNode_4"  # Replace with your device's name
+        target_device_name = "5200001"  # Replace with your device's name
         target_device = None
         scan_start_time = asyncio.get_event_loop().time()
 
