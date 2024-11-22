@@ -14,6 +14,31 @@ CHARACTERISTIC_UUID = "00000001-000e-11e1-ac36-0002a5d5c51b"  # Replace with the
 
 fsiz = 0
 ADDRESS = 0
+
+def bytes_to_32bit_chunks(byte_data):
+    # Ensure the byte data length is a multiple of 4 by padding with zeros if necessary
+    while len(byte_data) % 4 != 0:
+        byte_data += b'\x00'
+    
+    # Convert 4 bytes into a single 32-bit integer
+    data_buffer = [
+        int.from_bytes(byte_data[i:i+4], byteorder='little')
+        for i in range(0, len(byte_data), 4)
+    ]
+    return data_buffer
+
+def crc32_multi(crc, data_buffer):
+    for data in data_buffer:
+        crc ^= data  # Initial XOR operation
+        for _ in range(32):
+            if crc & 0x80000000:
+                crc = (crc << 1) ^ 0x04C11DB7  # Polynomial used in STM32
+            else:
+                crc = (crc << 1)
+            crc &= 0xFFFFFFFF  # Ensure crc remains a 32-bit value
+        # print(f"len: {len(data_buffer)} data: {data:08x} CFC : {crc:08x}")
+    return crc
+
 async def send_firmware(filename: str):
     
     ''' ******************* '''
@@ -52,19 +77,22 @@ async def send_firmware(filename: str):
             # Read the firmware file
             with open(filename, 'rb') as file:
                 firmware_data = file.read()
-                if len(firmware_data) > MAX_FILE_SIZE:
+                firmware_len = len(firmware_data)
+                if firmware_len > MAX_FILE_SIZE:
                     print("Error: Firmware file exceeds maximum allowed size.")
                     return
-                
-                print(f"Firmware size: {len(firmware_data)} bytes")
-                
+                firm_rs2_len = int(firmware_len/4)
+                print(f"Firmware size: {firmware_len} bytes --- Firmware size/ 4: {firm_rs2_len} bytes")
+                aDataBuffer = bytes_to_32bit_chunks(firmware_data)
                 # Prepare the upgrade command
                 command_str = "upgradeFw".encode('utf-8')
-                file_size_bytes = len(firmware_data).to_bytes(4, byteorder='little')
-                crc_bytes = zlib.crc32(firmware_data).to_bytes(4, byteorder='little')
+                file_size_bytes = firmware_len.to_bytes(4, byteorder='little')
+                # crc_bytes = zlib.crc32(firmware_data).to_bytes(4, byteorder='little')
+                crc_bytes = crc32_multi(0xFFFFFFFF, aDataBuffer).to_bytes(4, byteorder='little')
+                # print("")
+                crc_bytes_fgs = crc32_multi(0xFFFFFFFF, aDataBuffer)
                 upgrade_command = command_str + file_size_bytes + crc_bytes
-                # print(f"Upgrade command (raw bytes): {upgrade_command}")
-                
+                print(f"Upgrade command (raw bytes): {crc_bytes_fgs:08x}")
         except FileNotFoundError:
             print("Error: Firmware file not found.")
             return
