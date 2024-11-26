@@ -1,0 +1,23 @@
+1. Install pip
+    Install pip using curl: If pip is not installed on your system, you can install it using the following commands.
+    First, download the get-pip.py script using curl:
+        curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+
+    Run the script to install pip: After downloading the get-pip.py script, run it with Python to install pip:
+        python get-pip.py
+        Or, if you're using Python 3:
+
+    python3 get-pip.py
+    Verify the installation: Once the installation is complete, verify that pip is installed by running:
+        pip --version
+        This should return the version of pip installed.
+
+2. Install Required Libraries using PIP
+    pip install azure-iot-device bleak sqlite3
+
+3. Set up Configuration
+   Make sure the "iot_config.json" file exists at the specified path (<copy relative path and paste in line no 15>) and contains the correct configuration values for hub_hostname, cert_file, and key_file.
+   Make sure the path for the "hub_hostname, cert_file, and key_file" are correct.
+
+4. Run the Script
+   python sensor_data_to_azure.py
