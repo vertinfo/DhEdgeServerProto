@@ -1,0 +1,5 @@
+{
+    "hub_hostname": "dh-prod-0717-eastus.azure-devices.net",
+    "cert_file": "/var/rootdirs/home/fio/datahoist_GW/Datahoist/V1_Scripts/Azure_iot_integration/certificate_dh00001001.pem",
+    "key_file": "/var/rootdirs/home/fio/datahoist_GW/Datahoist/V1_Scripts/Azure_iot_integration/private_key_dh00001001.pem"
+}
